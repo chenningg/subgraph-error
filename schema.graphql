@@ -1,0 +1,59 @@
+type Token @entity {
+  id: Bytes!
+  symbol: String!
+  name: String!
+  decimals: BigInt!
+  totalSupply: BigInt!
+  balances: [TokenBalance!]! @derivedFrom(field: "token")
+  allowances: [TokenAllowance!]! @derivedFrom(field: "token")
+  transactions: [Transaction!]! @derivedFrom(field: "token")
+}
+
+type TokenBalance @entity {
+  id: Bytes!
+  account: Account!
+  amount: BigInt!
+  token: Token!
+}
+
+type TokenAllowance @entity {
+  id: Bytes!
+  owner: Account!
+  spender: Account!
+  amount: BigInt!
+  token: Token!
+}
+
+type Account @entity {
+  id: Bytes!
+  balances: [TokenBalance!]! @derivedFrom(field: "account")
+  incomingAllowances: [TokenAllowance!]! @derivedFrom(field: "spender")
+  outgoingAllowances: [TokenAllowance!]! @derivedFrom(field: "owner")
+  fromTransactions: [Transaction!]! @derivedFrom(field: "caller")
+  toTransactions: [Transaction!]! @derivedFrom(field: "recipient")
+}
+
+enum TransactionType {
+  APPROVAL
+  TRANSFER
+  MINT
+  BURN
+}
+
+type Transaction @entity(immutable: true) {
+  id: ID!
+  type: TransactionType!
+  timestamp: BigInt!
+  hash: Bytes!
+  blockNumber: BigInt!
+  logIndex: BigInt!
+  gasLimit: BigInt!
+  gasPrice: BigInt!
+  caller: Account!
+  recipient: Account!
+  "Amount in native currency sent alongside the transaction."
+  value: BigInt!
+  "Amount sent or received, or approved."
+  amount: BigInt!
+  token: Token!
+}
